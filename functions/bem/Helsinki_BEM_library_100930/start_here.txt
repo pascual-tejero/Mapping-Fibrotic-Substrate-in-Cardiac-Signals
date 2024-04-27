@@ -1,0 +1,18 @@
+Helsinki BEM library v100930
+
+Setup:
+1. Copy this directory tree to your preferred location
+2. Edit "SetBEMPaths": set correct "maindir"
+3. Copy "SetBEMPaths" to some directory in your Matlab path
+
+Running the examples:
+1. Run mains/build/CreateTriangleMeshes to generate some meshes.
+2. In the mains/basic_examples -directory there are examples. Going through these examples and comparing those to the paper should get you started!
+
+General information:
+Designed, programmed and copyrighted by
+Matti Stenroos (everything else, except those routines mentioned below)
+Ville Mäntynen (routines in the directories analytical/sphere and mains/validation)
+
+Contact: 
+matti.stenroos@tkk.fi

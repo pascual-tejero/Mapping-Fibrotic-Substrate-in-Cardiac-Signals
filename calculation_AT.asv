@@ -1,0 +1,111 @@
+function [matrix_AT,matrix_RT] = calculation_AT(matrix)
+
+    sampleFrequency = 333;
+    mode = 1;
+    k = 1;
+    lenghtOfWin = 1;
+
+    %Obtention of the time window
+    accp = zeros(627,64);
+
+    for i = 1:size(matrix,1)
+    %     [stepFuncFinal(:,i),segments{:,i}] = getActiveSegmentsFromNLEOuni(signalOut(:,i),sampleFrequency,lenghtOfWin,k);
+        [accp,timelngth] = Hactseg(matrix(i,:),sampleFrequency);
+        accpt(i,1:length(accp)) = accp;
+    end
+
+    %% Obtaining the AT of the last window
+    %Location of the last time window in order to calculate the AT
+    y_lins = linspace(40,2000,size(matrix,2));
+    window_s = zeros(1,20);
+
+    for i=1:size(accpt,1)
+        
+        %Calculation AT
+        pos_last1_accpt_AT = find(accpt(i,:),1,'last');
+        vector_values_AT = accpt(i,1:pos_last1_accpt_AT);
+        pos_0_accpt_AT = find(vector_values_AT == 0);       
+
+        pos_window_AT(i,1) = pos_0_accpt_AT(end); pos_window_AT(i,1) = pos_window_AT(i,1) + 1;
+        pos_window_AT(i,2) = pos_last1_accpt_AT;
+        
+        window_B_AT = matrix(i,pos_window_AT(i,1):pos_window_AT(i,2));
+
+        pos_window_AT_s(i,1) = pos_window_AT(i,1)/size(matrix,2)*2000;
+        pos_window_AT_s(i,2) = pos_window_AT(i,2)/size(matrix,2)*2000;
+
+        
+        
+        %Calculation RT
+        vector_values_RT = accpt(i,1:pos_window_AT(i,1)); vector_values_RT(end) = 0;
+        pos_last1_accpt_RT = find(vector_values_RT,1,'last');
+        
+        pos_window_RT(i,1) = pos_last1_accpt_RT; pos_window_RT(i,1) = pos_window_RT(i,1) + 1;
+        pos_window_RT(i,2) = pos_window_AT(i,1); pos_window_RT(i,2) = pos_window_RT(i,2) - 1;
+        
+        window_B_RT = matrix(i,pos_window_RT(i,1):pos_window_RT(i,2));
+        
+        pos_window_RT_s(i,1) = pos_window_RT(i,1)/size(matrix,2)*2000;
+        pos_window_RT_s(i,2) = pos_window_RT(i,2)/size(matrix,2)*2000;
+        
+        
+        
+        value_window_AT_s = y_lins(pos_window_AT(i,1):pos_window_AT(i,2));
+        value_window_RT_s = y_lins(pos_window_RT(i,1):pos_window_RT(i,2));
+
+        window_s_AT(i,1:length(value_window_AT_s)) = value_window_AT_s;
+        window_s_RT(i,1:length(value_window_RT_s)) = value_window_RT_s;
+
+        %Plot
+%         figure; plot(y_lins,matrix(i,:)); hold on; 
+%         plot(y_lins,accpt(i,:)); hold on; 
+%         plot(value_window_AT_s, window_B_AT); hold on;
+%         plot(value_window_RT_s,window_B_RT);
+%         
+%         legend("Electrogram","Detection function","Window AT","Window RT");
+%         title(['Fibrotic tissue - Reentry case - Electrode: ', num2str(i)]); 
+%         xlabel("Time (ms)"); ylabel("Amplitude voltage (mV)");
+        
+        %Calculation of AT
+        derivative = gradient(window_B_AT);
+        [~,at(i)] = min((derivative),[],2);
+        matrix_AT(i) = window_s_AT(i,at(i));
+
+        %Calculation of RT
+        derivative_2 = gradient(derivative);
+        
+        for j = 1:length(derivative_2)
+            if((derivative_2(j) > 0) & (derivative_2(j+1) < 0))
+                if (derivative_2(j) > derivative_2(j+1))
+                    pos_RT(i) = j+1;
+                else
+                    pos_RT(i) = j;
+                end
+            else
+                if(derivative_2 > 0)
+                    [~,pos_RT] = min(derivative_2);
+                    
+                else
+                    [~,pos_RT] = max(derivative_2);
+                end
+        end
+        
+        matrix_RT(i) = window_s_RT(i,pos_RT(i));
+        
+
+
+    end
+
+
+    % [~,AT_pos(1,1)] = max(at); [~,AT_pos(1,2)] = min(at);
+    % value = window_s(at(i));
+    % 
+    % AT_matrix_final(1,1) = window_s(AT_pos(1,1),at(AT_pos(1,1)));
+    % AT_matrix_final(1,2) = window_s(AT_pos(1,2),at(AT_pos(1,2)));
+%   find((value_at < 1850) & (value_at > 1830))
+%     for i=1:length(aa)
+%         hold on; 
+%         plot(matrix(aa(i),:))
+%     end
+end
+
